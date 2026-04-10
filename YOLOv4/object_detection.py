@@ -58,7 +58,7 @@ class ObjectDetection:
         self.cap = WebcamVideoStream(src = id).start()
         self.cfgfile = "cfg/yolov4.cfg"
         self.weightsfile = "yolov4.weights"
-        self.confidence = float(0.6)
+        self.confidence = float(0.4)
         self.nms_thesh = float(0.8)
         self.num_classes = 80
         self.classes = load_classes('data/coco.names')
@@ -101,8 +101,22 @@ class ObjectDetection:
                 
                 output = self.model(img)
                 from tool.utils import post_processing,plot_boxes_cv2
-                bounding_boxes = post_processing(img,self.confidence, self.nms_thesh, output)
-                frame = plot_boxes_cv2(frame, bounding_boxes[0], savename= None, class_names=self.classes, color = None, colors=self.colors)
+                bounding_boxes = post_processing(img, self.confidence, self.nms_thesh, output)
+
+# 🚀 MARS MODIFICATION
+if len(bounding_boxes[0]) > 0:
+    for box in bounding_boxes[0]:
+        cls_id = int(box[6])
+        conf = box[5]
+
+        if conf < 0.5:
+            self.classes[cls_id] = "Unknown Martian Object Detected On MARS"
+        elif self.classes[cls_id] == "person":
+            self.classes[cls_id] = "Astronaut"
+        elif self.classes[cls_id] == "bottle":
+            self.classes[cls_id] = "Water Sample"
+
+frame = plot_boxes_cv2(frame, bounding_boxes[0], savename=None, class_names=self.classes, color=None, colors=self.colors)
 
             except:
                 pass
